@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'taxpayer_id',
     ];
 
     /**
@@ -44,5 +45,13 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the taxpayer that owns the user.
+     */
+    public function taxpayer()
+    {
+        return $this->belongsTo(Taxpayer::class);
     }
 }
