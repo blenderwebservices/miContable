@@ -22,8 +22,19 @@ class CfdiParserService
 
         $xmlContent = file_get_contents($xmlPath);
         
-        // Register namespaces
-        $xml = new SimpleXMLElement($xmlContent);
+        try {
+            $xml = new SimpleXMLElement($xmlContent);
+        } catch (Exception $e) {
+            throw new Exception("Error parsing XML: " . $e->getMessage());
+        }
+
+        // Register namespaces for all supported versions
+        $namespaces = $xml->getDocNamespaces(true);
+        foreach ($namespaces as $prefix => $ns) {
+            $xml->registerXPathNamespace($prefix ?: 'cfdi', $ns);
+        }
+        
+        // Ensure standard prefixes are available even if not in root
         $xml->registerXPathNamespace('cfdi', 'http://www.sat.gob.mx/cfd/4');
         $xml->registerXPathNamespace('cfdi3', 'http://www.sat.gob.mx/cfd/3');
         $xml->registerXPathNamespace('tfd', 'http://www.sat.gob.mx/TimbreFiscalDigital');
@@ -59,7 +70,7 @@ class CfdiParserService
             $xml = new SimpleXMLElement($xmlContent);
             
             // Check if it's a valid CFDI (has Comprobante root element)
-            return $xml->getName() === 'Comprobante';
+            return str_contains($xml->getName(), 'Comprobante');
         } catch (Exception $e) {
             return false;
         }
@@ -70,12 +81,11 @@ class CfdiParserService
      */
     private function extractUuid(SimpleXMLElement $xml): ?string
     {
-        // Try CFDI 4.0 namespace
         $tfd = $xml->xpath('//tfd:TimbreFiscalDigital');
         
         if (!empty($tfd)) {
             $attributes = $tfd[0]->attributes();
-            return (string) $attributes['UUID'];
+            return (string) ($attributes['UUID'] ?? $attributes['uuid'] ?? null);
         }
 
         return null;
@@ -87,7 +97,7 @@ class CfdiParserService
     private function extractEmissionDate(SimpleXMLElement $xml): ?string
     {
         $attributes = $xml->attributes();
-        return isset($attributes['Fecha']) ? (string) $attributes['Fecha'] : null;
+        return (string) ($attributes['Fecha'] ?? $attributes['fecha'] ?? null);
     }
 
     /**
@@ -95,22 +105,11 @@ class CfdiParserService
      */
     private function extractIssuerRfc(SimpleXMLElement $xml): ?string
     {
-        // Try CFDI 4.0
-        $xml->registerXPathNamespace('cfdi', 'http://www.sat.gob.mx/cfd/4');
-        $emisor = $xml->xpath('//cfdi:Emisor');
+        $emisor = $xml->xpath('//cfdi:Emisor | //cfdi3:Emisor');
         
         if (!empty($emisor)) {
             $attributes = $emisor[0]->attributes();
-            return (string) $attributes['Rfc'];
-        }
-
-        // Try CFDI 3.3
-        $xml->registerXPathNamespace('cfdi3', 'http://www.sat.gob.mx/cfd/3');
-        $emisor = $xml->xpath('//cfdi3:Emisor');
-        
-        if (!empty($emisor)) {
-            $attributes = $emisor[0]->attributes();
-            return (string) $attributes['Rfc'];
+            return (string) ($attributes['Rfc'] ?? $attributes['rfc'] ?? null);
         }
 
         return null;
@@ -121,22 +120,11 @@ class CfdiParserService
      */
     private function extractReceiverRfc(SimpleXMLElement $xml): ?string
     {
-        // Try CFDI 4.0
-        $xml->registerXPathNamespace('cfdi', 'http://www.sat.gob.mx/cfd/4');
-        $receptor = $xml->xpath('//cfdi:Receptor');
+        $receptor = $xml->xpath('//cfdi:Receptor | //cfdi3:Receptor');
         
         if (!empty($receptor)) {
             $attributes = $receptor[0]->attributes();
-            return (string) $attributes['Rfc'];
-        }
-
-        // Try CFDI 3.3
-        $xml->registerXPathNamespace('cfdi3', 'http://www.sat.gob.mx/cfd/3');
-        $receptor = $xml->xpath('//cfdi3:Receptor');
-        
-        if (!empty($receptor)) {
-            $attributes = $receptor[0]->attributes();
-            return (string) $attributes['Rfc'];
+            return (string) ($attributes['Rfc'] ?? $attributes['rfc'] ?? null);
         }
 
         return null;
@@ -148,7 +136,7 @@ class CfdiParserService
     private function extractTotal(SimpleXMLElement $xml): ?float
     {
         $attributes = $xml->attributes();
-        return isset($attributes['Total']) ? (float) $attributes['Total'] : null;
+        return isset($attributes['Total']) ? (float) $attributes['Total'] : (isset($attributes['total']) ? (float) $attributes['total'] : null);
     }
 
     /**
@@ -156,29 +144,22 @@ class CfdiParserService
      */
     private function extractTaxAmount(SimpleXMLElement $xml): float
     {
-        // Try CFDI 4.0
-        $xml->registerXPathNamespace('cfdi', 'http://www.sat.gob.mx/cfd/4');
-        $impuestos = $xml->xpath('//cfdi:Impuestos');
+        // Try to find the summary total first
+        $impuestosFull = $xml->xpath('//cfdi:Impuestos[@TotalImpuestosTrasladados] | //cfdi3:Impuestos[@TotalImpuestosTrasladados]');
         
-        if (!empty($impuestos)) {
-            $attributes = $impuestos[0]->attributes();
-            if (isset($attributes['TotalImpuestosTrasladados'])) {
-                return (float) $attributes['TotalImpuestosTrasladados'];
-            }
+        if (!empty($impuestosFull)) {
+            $attributes = $impuestosFull[0]->attributes();
+            return (float) $attributes['TotalImpuestosTrasladados'];
         }
 
-        // Try CFDI 3.3
-        $xml->registerXPathNamespace('cfdi3', 'http://www.sat.gob.mx/cfd/3');
-        $impuestos = $xml->xpath('//cfdi3:Impuestos');
-        
-        if (!empty($impuestos)) {
-            $attributes = $impuestos[0]->attributes();
-            if (isset($attributes['TotalImpuestosTrasladados'])) {
-                return (float) $attributes['TotalImpuestosTrasladados'];
-            }
+        // If not found, sum up individual taxes
+        $traslados = $xml->xpath('//cfdi:Traslado[@Importe] | //cfdi3:Traslado[@Importe]');
+        $total = 0.0;
+        foreach ($traslados as $traslado) {
+            $total += (float) $traslado->attributes()['Importe'];
         }
 
-        return 0.0;
+        return $total;
     }
 
     /**
@@ -187,14 +168,14 @@ class CfdiParserService
     private function extractType(SimpleXMLElement $xml): ?string
     {
         $attributes = $xml->attributes();
-        if (!isset($attributes['TipoDeComprobante'])) {
+        $tipo = (string) ($attributes['TipoDeComprobante'] ?? $attributes['tipoDeComprobante'] ?? null);
+        
+        if (!$tipo) {
             return null;
         }
 
-        $tipo = (string) $attributes['TipoDeComprobante'];
-        
         // Map SAT codes to readable names
-        return match($tipo) {
+        return match(strtoupper($tipo)) {
             'I' => 'Ingreso',
             'E' => 'Egreso',
             'T' => 'Traslado',
@@ -210,7 +191,7 @@ class CfdiParserService
     private function extractPaymentMethod(SimpleXMLElement $xml): ?string
     {
         $attributes = $xml->attributes();
-        return isset($attributes['MetodoPago']) ? (string) $attributes['MetodoPago'] : null;
+        return (string) ($attributes['MetodoPago'] ?? $attributes['metodoPago'] ?? null);
     }
 
     /**
@@ -219,7 +200,7 @@ class CfdiParserService
     private function extractPaymentForm(SimpleXMLElement $xml): ?string
     {
         $attributes = $xml->attributes();
-        return isset($attributes['FormaPago']) ? (string) $attributes['FormaPago'] : null;
+        return (string) ($attributes['FormaPago'] ?? $attributes['formaPago'] ?? null);
     }
 
     /**
@@ -228,6 +209,7 @@ class CfdiParserService
     private function extractCurrency(SimpleXMLElement $xml): string
     {
         $attributes = $xml->attributes();
-        return isset($attributes['Moneda']) ? (string) $attributes['Moneda'] : 'MXN';
+        return (string) ($attributes['Moneda'] ?? $attributes['moneda'] ?? 'MXN');
     }
 }
+

@@ -36,9 +36,24 @@ class CfdiResource extends Resource
 
                         try {
                             $parser = new \App\Services\CfdiParserService();
-                            $xmlPath = storage_path('app/public/' . $state);
                             
-                            if (!file_exists($xmlPath)) {
+                            // Try multiple path resolutions
+                            $pathsToTry = [
+                                storage_path('app/public/' . $state),
+                                storage_path('app/' . $state),
+                                $state, // Might be absolute already
+                            ];
+
+                            $xmlPath = null;
+                            foreach ($pathsToTry as $path) {
+                                if (file_exists($path)) {
+                                    $xmlPath = $path;
+                                    break;
+                                }
+                            }
+                            
+                            if (!$xmlPath) {
+                                \Illuminate\Support\Facades\Log::warning("CFDI Parser: File not found for state: " . $state);
                                 return;
                             }
 
@@ -55,8 +70,23 @@ class CfdiResource extends Resource
                             $set('payment_method', $data['payment_method']);
                             $set('payment_form', $data['payment_form']);
                             $set('currency', $data['currency']);
+                            
+                            \Illuminate\Support\Facades\Notification::make()
+                                ->title('XML Procesado')
+                                ->success()
+                                ->send();
+
                         } catch (\Exception $e) {
-                            // Silent fail - user can still fill manually
+                            \Illuminate\Support\Facades\Log::error("CFDI Parser Error: " . $e->getMessage(), [
+                                'state' => $state,
+                                'trace' => $e->getTraceAsString()
+                            ]);
+                            
+                            \Illuminate\Support\Facades\Notification::make()
+                                ->title('Error al procesar XML')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
                         }
                     }),
                 Forms\Components\TextInput::make('uuid')
@@ -64,32 +94,32 @@ class CfdiResource extends Resource
                     ->required()
                     ->maxLength(36)
                     ->unique(ignoreRecord: true)
-                    ->readOnly(),
+                    ->dehydrated(true),
                 Forms\Components\DateTimePicker::make('emission_date')
                     ->label('Fecha de Emisión')
-                    ->readOnly(),
+                    ->dehydrated(true),
                 Forms\Components\TextInput::make('issuer_rfc')
                     ->label('RFC Emisor')
                     ->required()
                     ->maxLength(13)
-                    ->readOnly(),
+                    ->dehydrated(true),
                 Forms\Components\TextInput::make('receiver_rfc')
                     ->label('RFC Receptor')
                     ->required()
                     ->maxLength(13)
-                    ->readOnly(),
+                    ->dehydrated(true),
                 Forms\Components\TextInput::make('total')
                     ->label('Total')
                     ->required()
                     ->numeric()
                     ->prefix('$')
-                    ->readOnly(),
+                    ->dehydrated(true),
                 Forms\Components\TextInput::make('tax_amount')
                     ->label('Impuestos')
                     ->numeric()
                     ->default(0)
                     ->prefix('$')
-                    ->readOnly(),
+                    ->dehydrated(true),
                 Forms\Components\FileUpload::make('pdf_path')
                     ->label('Archivo PDF')
                     ->directory('cfdi/pdf')
@@ -104,20 +134,21 @@ class CfdiResource extends Resource
                         'Nomina' => 'Nómina',
                         'Pago' => 'Pago',
                     ])
-                    ->readOnly(),
+                    ->dehydrated(true),
                 Forms\Components\TextInput::make('payment_method')
                     ->label('Método de Pago')
                     ->maxLength(255)
-                    ->readOnly(),
+                    ->dehydrated(true),
                 Forms\Components\TextInput::make('payment_form')
                     ->label('Forma de Pago')
                     ->maxLength(255)
-                    ->readOnly(),
+                    ->dehydrated(true),
                 Forms\Components\TextInput::make('currency')
                     ->label('Moneda')
                     ->default('MXN')
                     ->maxLength(3)
-                    ->readOnly(),
+                    ->dehydrated(true),
+
             ]);
     }
 
