@@ -42,7 +42,7 @@
                 </div>
                 <div class="flex items-center space-x-4">
                     @auth
-                        <a href="{{ url('/dashboard') }}"
+                        <a href="{{ url('/admin') }}"
                             class="text-slate-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">Dashboard</a>
                         <a href="{{ url('/admin') }}"
                             class="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-sm">Panel
