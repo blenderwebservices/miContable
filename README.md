@@ -1,59 +1,31 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+Documento de Definición de Funciones: Plataforma miContable
+1. Propósito de la Plataforma
+miContable es una solución integral diseñada para la gestión financiera y contable automatizada, enfocada en optimizar la relación entre empresas, contadores y la administración tributaria. Su objetivo principal es centralizar la información fiscal para facilitar el cumplimiento de obligaciones y la toma de decisiones estratégicas.
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+2. Funciones Principales
+A. Gestión y Conciliación Fiscal (SAT)
+Sincronización Automática con el SAT: Descarga y actualización constante de Facturas Electrónicas (CFDI), tanto emitidas como recibidas, directamente desde los servidores de la autoridad fiscal.
+Conciliación de Estatus: Verificación automática de la vigencia de los comprobantes (vigente o cancelado) para asegurar que la contabilidad refleje la realidad fiscal.
+Reporte de Operaciones con EFOS: Identificación y alerta temprana sobre facturas emitidas por empresas listadas como "Empresas que Facturan Operaciones Simuladas".
+B. Módulo de Egresos y Gastos
+Clasificación de Gastos: Herramientas para categorizar facturas recibidas de proveedores por concepto, facilitando el control presupuestario.
+Gestión de Cuentas por Pagar: Seguimiento de facturas pendientes de pago y organización de flujos de salida de efectivo.
+C. Módulo de Ingresos y Facturación
+Control de Cobranza: Visualización en tiempo real de las facturas emitidas que aún no han sido liquidadas por los clientes.
+Generación de Reportes de Ventas: Análisis detallado de ingresos por periodo, cliente o tipo de servicio.
+D. Contabilidad y Cálculo de Impuestos
+Generación de Libros Contables: Creación automatizada de la balanza de comprobación y el catálogo de cuentas.
+Cálculo Multitributario: Proyección y cálculo de impuestos principales como IVA (Trasladado y Acreditable), ISR (Pagos Provisionales) y retenciones.
+Contabilidad Electrónica: Preparación de los archivos XML requeridos para el envío de la contabilidad mensual al SAT.
 
-## About Laravel
+3. Funciones de Usuario y Colaboración
+Acceso Multiusuario: Permite la colaboración en tiempo real entre el dueño de la empresa y su contador externo o departamento contable.
+Resguardo en la Nube: Almacenamiento seguro de toda la documentación fiscal y contable, eliminando la dependencia de archivos físicos o almacenamiento local.
+Dashboard de Salud Financiera: Panel de control visual con indicadores clave de rendimiento (KPIs), como utilidad bruta, gastos operativos y carga fiscal estimada.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+4. Beneficios Operativos
+Reducción de Errores: Al automatizar la descarga de CFDIs, se eliminan las omisiones manuales.
+Ahorro de Tiempo: El contador se enfoca en el análisis y estrategia en lugar de la captura de datos.
+Transparencia: El empresario tiene visibilidad total de sus números en cualquier momento y dispositivo.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Para más detalles técnicos o acceso a soporte, puedes consultar directamente el centro de recursos en https://micontable.axiacorehub.com.
